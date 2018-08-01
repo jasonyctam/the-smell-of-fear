@@ -1,0 +1,3 @@
+2018-08-81 jasonyctam@gmail.com
+- Initial commit with simple analysis code base
+- This requires the user to download the data files separately from https://www.kaggle.com/jswicker/the-smell-of-fear and create a folder named "Data/" that holds the extracted content
