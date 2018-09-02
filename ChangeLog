@@ -1,3 +1,13 @@
-2018-08-81 jasonyctam@gmail.com
+2018-09-02 jasonyctam@gmail.com
+ - Created plotChannelBackground in DataAnalysis.py
+ - Created getChannelBackground in DFFunctions.py
+ - Created plotBackgroundGraph in plotAnalysis.py
+
+2018-09-01 jasonyctam@gmail.com
+ - Created plotMovieGasData in DataAnalysis.py
+ - Created getMovieDF in DFFunctions.py
+ - Created plotMovieGasGraph in plotAnalysis.py
+
+2018-08-01 jasonyctam@gmail.com
 - Initial commit with simple analysis code base
 - This requires the user to download the data files separately from https://www.kaggle.com/jswicker/the-smell-of-fear and create a folder named "Data/" that holds the extracted content
