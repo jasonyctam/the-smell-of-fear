@@ -16,7 +16,7 @@ class plotAnalysis():
 ###################################################################
 ###################################################################
 
-    def __init__(self, plotsDir=""):
+    def __init__(self, bgStartHour, bgEndHour, plotsDir=""):
 
         sns.set_style("darkgrid")
         colors = ["windows blue", "amber", "greenish", "orange", "sky blue", "greyish", "salmon", "faded green", "lavender", "denim blue", "medium green"]
@@ -28,6 +28,9 @@ class plotAnalysis():
         self.figWidth = 15
         self.figHeight = 8
         self.linewidth = 2
+
+        self.backgroundStartHour = bgStartHour
+        self.backgroundEndHour = bgEndHour
         
         return
         
@@ -48,9 +51,6 @@ class plotAnalysis():
         columns = list(inDF)
 
         inDF[columns[0]] = pd.to_datetime(inDF[columns[0]])
-
-        print(inDF[columns[0]].dtype)
-        print(inDF[columns[1]].dtype)
 
         top_lim = 0
 
@@ -73,7 +73,7 @@ class plotAnalysis():
 ###################################################################
 ###################################################################
 
-    def plotBackgroundGraph(self, inDF, channel, title="", xlabel="", ylabel="", legendLabel1="", outputFileName="", xLabelSize=25, tilt=False, xTickRotation=0, dateFormat='%Y-%m'):
+    def plotBackgroundGraph(self, bgDF, channel, title="", xlabel="", ylabel="", legendLabel1="", outputFileName="", xLabelSize=25, tilt=False, xTickRotation=0, dateFormat='%Y-%m'):
         
         fig, ax = plt.subplots(figsize=(self.figWidth, self.figHeight))
             
@@ -84,13 +84,15 @@ class plotAnalysis():
         ax.set_xlabel(xlabel, fontsize=xLabelSize)
         ax.set_ylabel(ylabel, fontsize=xLabelSize)
         
-        x1 = inDF['Time']
-        y1 = inDF[channel]
+        x1 = bgDF['Time']
+        y1 = bgDF[channel]
 
         ax.plot(x1,y1, label=legendLabel1, lw=self.linewidth)
 
+        inDF = bgDF.copy()
+
         inDF['Hours'] = inDF['Time'].apply(lambda x: x.time())
-        backgroundDF = inDF[(inDF['Hours']>=time(4, 0)) & (inDF['Hours']<=time(9, 0))]
+        backgroundDF = inDF[(inDF['Hours']>=self.backgroundStartHour) & (inDF['Hours']<=self.backgroundEndHour)]
 
         ax.plot(backgroundDF['Time'],backgroundDF[channel], label="Background", color='red', marker='*', ls='None')
         ax.legend(loc='upper left', prop={'size': xLabelSize-10}, shadow=True, frameon=True)

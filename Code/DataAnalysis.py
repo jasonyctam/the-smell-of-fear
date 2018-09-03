@@ -28,8 +28,14 @@ class DataAnalysis():
         self.tiltBool = True
         self.rotation = 30
 
-        self.plotData = plotMethods.plotAnalysis(self.plotsDir)
-        self.DFFunc = DFFuncs.DFFunctions()
+        self.backgroundStartDate = dt.datetime(2013,12,30)
+        self.backgroundEndDate = dt.datetime(2014,1,7)
+
+        self.backgroundStartHour = dt.time(4, 0)
+        self.backgroundEndHour = dt.time(9, 0)
+
+        self.plotData = plotMethods.plotAnalysis(plotsDir=self.plotsDir, bgStartHour=self.backgroundStartHour, bgEndHour=self.backgroundEndHour)
+        self.DFFunc = DFFuncs.DFFunctions(bgStartDate=self.backgroundStartDate, bgEndDate=self.backgroundEndDate, bgStartHour=self.backgroundStartHour, bgEndHour=self.backgroundEndHour)
 
         return
 
@@ -93,15 +99,18 @@ class DataAnalysis():
         #     "Bele & Sebastian" : 104
         # }
 
-        ballet_DF = self.screening_DF[self.screening_DF["movie"]=="Bolshoi: Dornröschen"]
-        print(ballet_DF.head(10))
+        # ballet_DF = self.screening_DF[self.screening_DF["movie"]=="Bolshoi: Dornröschen"]
+        # print(ballet_DF.head(10))
 
+        # Dataframe with each column as the gas channel data for each session of the specified movie and gas channel
         hobbit_CO2DF = self.DFFunc.getMovieDF('Hobbit 2', self.hobbit_DF, self.screening_DF, 'CO2', self.TOF_CO2_DF)
 
-        print(self.DFFunc.getChannelBackground('CO2', self.TOF_CO2_DF))
+        # Normalised for each session ((value-background)/attendence)
+        hobbit_CO2DF_norm = self.DFFunc.getMovieDF('Hobbit 2', self.hobbit_DF, self.screening_DF, 'CO2', self.TOF_CO2_DF, normalised=True)
 
-        # self.plotMovieGasData(hobbit_CO2DF, movie='Hobbit 2', channel='CO2', display=True)
-        self.plotChannelBackground(display=True)
+        self.plotMovieGasData(hobbit_CO2DF, movie='Hobbit 2', channel='CO2', display=True)
+        self.plotMovieGasData(hobbit_CO2DF_norm, movie='Hobbit 2', channel='CO2', display=True, normalised=True)
+        # self.plotChannelBackground(display=True)
         # self.plotRawData(display=True)
 
         if self.displayGraph==True:
@@ -112,9 +121,14 @@ class DataAnalysis():
 ###################################################################
 ###################################################################
 
-    def plotMovieGasData(self, movieGasDF, movie, channel, display=False):
+    def plotMovieGasData(self, movieGasDF, movie, channel, display=False, normalised=False):
 
-        self.plotData.plotMovieGasGraph(movieGasDF, title=channel, xlabel="Time", ylabel=channel, outputFileName=movie+"_"+channel+".png", tilt=self.tiltBool, xTickRotation=self.rotation, dateFormat='%H:%M:%S')
+        if normalised==True:
+            outputFilename = movie+"_"+channel+"_normed.png"
+        else:
+            outputFilename = movie+"_"+channel+".png"
+
+        self.plotData.plotMovieGasGraph(movieGasDF, title=channel, xlabel="Time", ylabel=channel, outputFileName=outputFilename, tilt=self.tiltBool, xTickRotation=self.rotation, dateFormat='%H:%M:%S')
 
         if display==True:
             self.displayGraph = True
@@ -126,7 +140,7 @@ class DataAnalysis():
 
     def plotChannelBackground(self, display=False):
 
-        backgroundDF = self.TOF_CO2_DF[(self.TOF_CO2_DF['Time']>=dt.datetime(2013,12,30)) & (self.TOF_CO2_DF['Time']<=dt.datetime(2014,1,7))]
+        backgroundDF = self.TOF_CO2_DF[(self.TOF_CO2_DF['Time']>=self.backgroundStartDate) & (self.TOF_CO2_DF['Time']<=self.backgroundEndDate)]
 
         self.plotData.plotBackgroundGraph(backgroundDF, channel="CO2", title="CO2", xlabel="Time", ylabel="CO2", legendLabel1="CO2", outputFileName="bg_CO2.png", tilt=self.tiltBool, xTickRotation=self.rotation, dateFormat='%m-%d %H:%M:%S')
 

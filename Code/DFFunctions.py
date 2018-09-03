@@ -17,8 +17,13 @@ class DFFunctions():
 ###################################################################
 ###################################################################
 
-    def __init__(self):
+    def __init__(self, bgStartDate, bgEndDate, bgStartHour, bgEndHour):
         
+        self.backgroundStartDate = bgStartDate
+        self.backgroundEndDate = bgEndDate
+        self.backgroundStartHour = bgStartHour
+        self.backgroundEndHour = bgEndHour
+
         return
         
 ###################################################################
@@ -42,7 +47,7 @@ class DFFunctions():
 ###################################################################
 ###################################################################
 
-    def getMovieDF(self, movieName, labelsDF, screening_DF, channel, gasDF):
+    def getMovieDF(self, movieName, labelsDF, screening_DF, channel, gasDF, normalised=False):
 
         ## This function creates a dataframe that contains the values of the specified gas channel for all sessions of the specified movie
 
@@ -65,6 +70,13 @@ class DFFunctions():
         # Resets the index for joining data
         movieDF = movieDF.reset_index()
 
+        # Get background count of channel
+        if (normalised==True):
+            background = self.getChannelBackground(channel, gasDF)
+        else:
+            background = 0
+            attendence = 1.0
+
         # Loop throught the list of session starting times
         for i in range(0, movieDF.shape[0]):
 
@@ -77,9 +89,15 @@ class DFFunctions():
             # Get data from gas channel and reset index
             session = gasDF[(gasDF['Time']>=start) & (gasDF['Time']<=end)].reset_index()
 
+            # Get atttendence
+            if (normalised==True):
+                attendence = (movieDF['filled %'][i]*movieDF['capacity'][i])/100.0
+
             # Only add to the output dataframe if the dataframe if not empty
             if session.shape[0] < 1:
                 continue;
+            elif (normalised==True):
+                outDF[str(start)] = session[channel].apply(lambda x: (x-background)/attendence)
             else:
                 outDF[str(start)] = session[channel]
 
@@ -94,7 +112,7 @@ class DFFunctions():
 
         inDF = gasDF
         inDF['Hours'] = inDF['Time'].apply(lambda x: x.time())
-        backgroundDF = inDF[(inDF['Time']>=datetime(2013,12,30)) & (inDF['Time']<=datetime(2014,1,7)) & (inDF['Hours']>=time(4, 0)) & (inDF['Hours']<=time(9, 0))]
+        backgroundDF = inDF[(inDF['Time']>=self.backgroundStartDate) & (inDF['Time']<=self.backgroundEndDate) & (inDF['Hours']>=self.backgroundStartHour) & (inDF['Hours']<=self.backgroundEndHour)]
         
         return backgroundDF[channel].mean()
 
