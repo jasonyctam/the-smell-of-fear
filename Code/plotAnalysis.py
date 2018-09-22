@@ -37,7 +37,7 @@ class plotAnalysis():
 ###################################################################
 ###################################################################
 
-    def plotMovieGasGraph(self, inDF, title="", xlabel="", ylabel="", outputFileName="", xLabelSize=25, tilt=False, xTickRotation=0, dateFormat='%H:%M:%S'):
+    def plotMovieSessionGasGraph(self, inDF, title="", xlabel="", ylabel="", outputFileName="", xLabelSize=25, tilt=False, xTickRotation=0, dateFormat='%H:%M:%S'):
         
         fig, ax = plt.subplots(figsize=(self.figWidth, self.figHeight))
             
@@ -58,6 +58,42 @@ class plotAnalysis():
             ax.plot(inDF[columns[0]],inDF[columns[i]], label=columns[i], lw=self.linewidth)
             if inDF[columns[i]].max() > top_lim:
                 top_lim = inDF[columns[i]].max()
+
+        ax.legend(loc='upper left', prop={'size': xLabelSize-14}, shadow=True, frameon=True)
+        ax.tick_params(axis='both', which='major', labelsize=xLabelSize)
+        ax.set_ylim(bottom = 0, top=top_lim*1.5)
+        if tilt:
+            fig.autofmt_xdate(rotation=xTickRotation)
+            
+        if len(outputFileName) > 0:
+            plt.savefig(self.outDir+outputFileName)
+
+        return
+
+###################################################################
+###################################################################
+
+    def plotMovieGasGraph(self, inDF, title="", xlabel="", ylabel="", outputFileName="", channel="", xLabelSize=25, tilt=False, xTickRotation=0, dateFormat='%H:%M:%S'):
+        
+        inDF = inDF.dropna()
+
+        print(inDF.tail(10))
+
+        fig, ax = plt.subplots(figsize=(self.figWidth, self.figHeight))
+            
+        hfmt = matplotlib.dates.DateFormatter(dateFormat)
+        ax.xaxis.set_major_formatter(hfmt)
+        
+        ax.set_title(title, fontsize=xLabelSize)
+        ax.set_xlabel(xlabel, fontsize=xLabelSize)
+        ax.set_ylabel(ylabel, fontsize=xLabelSize)
+        
+        columns = list(inDF)
+
+        inDF[columns[0]] = pd.to_datetime(inDF[columns[0]])
+
+        ax.plot(inDF[columns[0]],inDF[channel], label=channel, lw=self.linewidth)
+        top_lim = inDF[channel].max()
 
         ax.legend(loc='upper left', prop={'size': xLabelSize-10}, shadow=True, frameon=True)
         ax.tick_params(axis='both', which='major', labelsize=xLabelSize)

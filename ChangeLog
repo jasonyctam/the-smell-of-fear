@@ -1,3 +1,10 @@
+2018-09-21 jasonyctam@gmail.com
+ - Version of code at Proposal
+ - Added code to create movieAvgDF, which is averaging values of different sessions of the same movie, with labels aligned
+ - Saves movieAvgDF to a CSV file in Data/
+ - NaN values from some columns during the averging process need to be verified
+ - DTW needs to be implemented before the averaging
+
 2018-09-03 jasonyctam@gmail.com
  - Added "normalised" option to getMovieDF in DFFunctions.py
  - Created global variables for background start and end dates and hour in DataAnalysis.py, and can pipe them into DFFunctions.py and plotAnalysis.py

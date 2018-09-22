@@ -47,9 +47,17 @@ class DFFunctions():
 ###################################################################
 ###################################################################
 
-    def getMovieDF(self, movieName, labelsDF, screening_DF, channel, gasDF, normalised=False):
+    def getMovieDF(self, movieName, inLabelsDF, inScreening_DF, channel, inGasDF, normalised=False):
 
         ## This function creates a dataframe that contains the values of the specified gas channel for all sessions of the specified movie
+
+        labelsDF = inLabelsDF.copy()
+        screening_DF = inScreening_DF.copy()
+        gasDF = inGasDF.copy()
+
+        del inLabelsDF
+        del inScreening_DF
+        del inGasDF
 
         # Acquire the number of columns from the labels dataframe for determining the time length of the movie
         numColumns = labelsDF.shape[1]
@@ -115,6 +123,175 @@ class DFFunctions():
         backgroundDF = inDF[(inDF['Time']>=self.backgroundStartDate) & (inDF['Time']<=self.backgroundEndDate) & (inDF['Hours']>=self.backgroundStartHour) & (inDF['Hours']<=self.backgroundEndHour)]
         
         return backgroundDF[channel].mean()
+
+###################################################################
+###################################################################
+
+    def getMovieAvgDF(self, movieName, inLabelsDF, inScreening_DF, inGasDF):
+
+        # labelsDF = inLabelsDF.copy()
+        screening_DF = inScreening_DF.copy()
+        gasDF = inGasDF.copy()
+
+        # del inLabelsDF
+        del inScreening_DF
+        del inGasDF
+
+        # self.getSessionLabels(inLabelsDF[1])
+
+        # Create time column of values from start of movie session
+        sessionStart = time(hour=0, minute=0, second=0)
+
+        colNames = list(gasDF.columns)
+
+        for i in range(0,len(movieName)):
+
+            labelsDF = inLabelsDF[i].copy()
+
+            labelsDF_T = self.getSessionLabels(inLabelsDF[i])
+
+            # Acquire the number of columns from the labels dataframe for determining the time length of the movie
+            numColumns = labelsDF.shape[1]
+
+            # Create time column of values from start of movie session
+            # sessionStart = time(hour=0, minute=0, second=0)
+            sessionTime = [None]*numColumns
+
+            for k in range(0, numColumns):
+                sessionTime[k] = datetime.combine(datetime.now().date(),sessionStart) + k*timedelta(seconds=30)
+
+            singleMovieDF = pd.DataFrame({'sessionTime': pd.Series(sessionTime), 'Movie':movieName[i]})
+            print(movieName[i])
+            for j in range(1,10):
+            # for j in range(1,len(colNames)):
+                channelName = colNames[j]
+                print(channelName)
+            
+                movieDF = self.getMovieDF(movieName=movieName[i], inLabelsDF=labelsDF, inScreening_DF=screening_DF, channel=channelName, inGasDF=gasDF, normalised=True)
+                numSessions = movieDF.shape[1]-1
+                movieDF['Average'] = movieDF.apply(self.sumRowWithNan, axis=1)/(numSessions)
+
+                singleMovieDF[channelName] = movieDF['Average']
+                del movieDF
+
+            del labelsDF
+
+            singleMovieDF['labels'] = labelsDF_T['labels']
+            singleMovieDF['label_Names'] = labelsDF_T['label_Names']
+
+            del labelsDF_T
+
+            if i==0:
+                outDF = singleMovieDF
+            else:
+                outDF = outDF.append(singleMovieDF, ignore_index=True)
+
+            del singleMovieDF
+
+        return outDF
+
+###################################################################
+###################################################################
+
+    def getSessionLabels(self, inLabelsDF):
+
+        labelsDF = inLabelsDF.copy()
+
+        del inLabelsDF
+
+        labelsDF_transposed = labelsDF.T # or df1.transpose()
+
+        columnNames = list(labelsDF_transposed.columns)
+
+        del labelsDF
+
+        labelsDF_transposed['vec'] = labelsDF_transposed.apply(self.getListFromRow, axis=1)
+        labelsDF_transposed['label_Names'] = labelsDF_transposed['vec'].apply(lambda x: self.getLabelListFromRow(x, columnNames))
+
+        labelsDF_transposed = labelsDF_transposed.reset_index()
+
+        outDF = pd.DataFrame({'labels':labelsDF_transposed['vec'], 'label_Names':labelsDF_transposed['label_Names']})
+
+        del labelsDF_transposed
+
+        return outDF
+
+###################################################################
+###################################################################
+
+    def getLabelListFromRow(self, vec, colNames):
+
+        out_vec = []
+
+        for i in range(0, len(vec)):
+            if vec[i]==1:
+                out_vec.append(str(colNames[i]).strip())
+
+        if len(out_vec)<1:
+            out_vec.append('Not labelled')
+
+        return out_vec
+
+###################################################################
+###################################################################
+
+    def getListFromRow(self, row):
+
+        row_matrix = row.values
+
+        vec = []
+
+        for i in range(0,len(row_matrix)):
+            vec.append(row_matrix[i])
+
+        del row_matrix
+
+        return vec
+
+###################################################################
+###################################################################
+
+    def getInputDF(self, inLabelsDF, inScreening_DF, inGasDF, normalised=False):
+
+        labelsDF = inLabelsDF.copy()
+        screening_DF = inScreening_DF.copy()
+        gasDF = inGasDF.copy()
+
+        del inLabelsDF
+        del inScreening_DF
+        del inGasDF
+
+        gasDF['Total'] = gasDF.apply(self.sumRowWithNan, axis=1)
+
+        print(gasDF.head(2))
+
+        return
+
+###################################################################
+###################################################################
+
+    def getMovieLabels(self, labels, originalMovieDF):
+
+        movieDF = originalMovieDF.copy()
+        movieDF['labels'] = labels['scene_label']
+        movieDF = movieDF.set_index('labels')
+
+        return movieDF
+
+###################################################################
+###################################################################
+
+    def sumRowWithNan(self, row):
+
+        row_matrix = row.values
+
+        sum = 0
+
+        for i in range(0, len(row_matrix)):
+            if isinstance(row_matrix[i], float) and math.isnan(row_matrix[i])==False:
+                sum = sum + row_matrix[i]
+
+        return sum
 
 ###################################################################
 ###################################################################
