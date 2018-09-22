@@ -168,8 +168,10 @@ class DFFunctions():
                 print(channelName)
             
                 movieDF = self.getMovieDF(movieName=movieName[i], inLabelsDF=labelsDF, inScreening_DF=screening_DF, channel=channelName, inGasDF=gasDF, normalised=True)
-                numSessions = movieDF.shape[1]-1
-                movieDF['Average'] = movieDF.apply(self.sumRowWithNan, axis=1)/(numSessions)
+                # numSessions = movieDF.shape[1]-1
+                movieDF['sum'] = movieDF.apply(self.sumRowWithNan, axis=1)
+                movieDF['nonNaN'] = movieDF.apply(self.getRowNonNaNNum, axis=1)
+                movieDF['Average'] = movieDF['sum']/movieDF['nonNaN']
 
                 singleMovieDF[channelName] = movieDF['Average']
                 del movieDF
@@ -292,6 +294,21 @@ class DFFunctions():
                 sum = sum + row_matrix[i]
 
         return sum
+
+###################################################################
+###################################################################
+
+    def getRowNonNaNNum(self, row):
+
+        row_matrix = row.values
+
+        num = 0
+
+        for i in range(0, len(row_matrix)):
+            if isinstance(row_matrix[i], float) and math.isnan(row_matrix[i])==False:
+                num = num + 1
+
+        return num
 
 ###################################################################
 ###################################################################
