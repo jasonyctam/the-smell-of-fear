@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import math
 from datetime import datetime, timedelta, time, date
+import progressbar
 
 ###################################################################
 ###################################################################
@@ -144,6 +145,12 @@ class DFFunctions():
 
         colNames = list(gasDF.columns)
 
+        widgets=[
+            ' [', progressbar.Timer(), '] ',
+            progressbar.Bar(),
+            ' (', progressbar.ETA(), ') ',
+        ]
+
         for i in range(0,len(movieName)):
 
             labelsDF = inLabelsDF[i].copy()
@@ -162,10 +169,13 @@ class DFFunctions():
 
             singleMovieDF = pd.DataFrame({'sessionTime': pd.Series(sessionTime), 'Movie':movieName[i]})
             print(movieName[i])
-            for j in range(1,10):
-            # for j in range(1,len(colNames)):
+
+            bar = progressbar.ProgressBar(widgets=widgets)
+
+            for j in bar(range(1,20)):
+            # for j in bar(range(1,len(colNames))):
                 channelName = colNames[j]
-                print(channelName)
+                # print(movieName[i] + ': ' + channelName + ' (' + str(j) + '/' + str(len(colNames)) + '), Movie (' + str(i) + '/' + str(len(movieName)) + ')')
             
                 movieDF = self.getMovieDF(movieName=movieName[i], inLabelsDF=labelsDF, inScreening_DF=screening_DF, channel=channelName, inGasDF=gasDF, normalised=True)
                 # numSessions = movieDF.shape[1]-1

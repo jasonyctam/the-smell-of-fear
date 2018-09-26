@@ -1,3 +1,8 @@
+2018-09-26 jasonyctam@gmail.com
+ - Corrected for NaN values
+ - Added progress bar for averaging each movie session
+ - movieAvgDF_Full.csv added, this contains all columns
+
 2018-09-22 jasonyctam@gmail.com
  - DTW examples added to the project, will implement it progressively
  - With multiple traces, DTW will proposed to be applied in a cyclic fashion and averaged.
