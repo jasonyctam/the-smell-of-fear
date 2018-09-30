@@ -1,3 +1,10 @@
+2018-09-30 jasonyctam@gmail.com
+ - Removed movie sessions that seem to be outliers
+ - Aligned movie sessions according to visually determined CO2 drop off
+ - This lead to getCleanMovieSessions and getSyncMovieDF in DFFunctions.py
+ - Changed the plot titles
+ - Added the document work to repository
+
 2018-09-26 jasonyctam@gmail.com
  - Corrected for NaN values
  - Added progress bar for averaging each movie session

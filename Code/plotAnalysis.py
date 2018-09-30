@@ -4,7 +4,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-from datetime import time
+from datetime import time, timedelta
 
 ###################################################################
 ###################################################################
@@ -37,7 +37,7 @@ class plotAnalysis():
 ###################################################################
 ###################################################################
 
-    def plotMovieSessionGasGraph(self, inDF, title="", xlabel="", ylabel="", outputFileName="", xLabelSize=25, tilt=False, xTickRotation=0, dateFormat='%H:%M:%S'):
+    def plotMovieSessionGasGraph(self, inDF, title="", xlabel="", ylabel="", numColumns=0, outputFileName="", xLabelSize=25, tilt=False, xTickRotation=0, dateFormat='%H:%M:%S'):
         
         fig, ax = plt.subplots(figsize=(self.figWidth, self.figHeight))
             
@@ -62,6 +62,14 @@ class plotAnalysis():
         ax.legend(loc='upper left', prop={'size': xLabelSize-14}, shadow=True, frameon=True)
         ax.tick_params(axis='both', which='major', labelsize=xLabelSize)
         ax.set_ylim(bottom = 0, top=top_lim*1.5)
+
+        sessionEndTime = inDF[columns[0]].min() + numColumns*timedelta(seconds=30)
+
+        # print('inDF[columns[0]]: ' + str(inDF[columns[0]].min()))
+        # print('sessionEndTime: ' + str(sessionEndTime))
+
+        ax.fill_betweenx(ax.get_ylim(), inDF[columns[0]].min(), sessionEndTime, alpha=.1, zorder=-1)
+
         if tilt:
             fig.autofmt_xdate(rotation=xTickRotation)
             
@@ -93,11 +101,13 @@ class plotAnalysis():
         inDF[columns[0]] = pd.to_datetime(inDF[columns[0]])
 
         ax.plot(inDF[columns[0]],inDF[channel], label=channel, lw=self.linewidth)
+
         top_lim = inDF[channel].max()
 
         ax.legend(loc='upper left', prop={'size': xLabelSize-10}, shadow=True, frameon=True)
         ax.tick_params(axis='both', which='major', labelsize=xLabelSize)
         ax.set_ylim(bottom = 0, top=top_lim*1.3)
+
         if tilt:
             fig.autofmt_xdate(rotation=xTickRotation)
             

@@ -63,10 +63,21 @@ class DataAnalysis():
         ## Print All column Names
         # for i in range(0,len(colNames)):
         #     print(colNames[i])
-        
+
+        allMovieNames = [
+            "Hobbit 2",
+            "Buddy",
+            "Machete Kills",
+            "Walter Mitty",
+            "Paranormal Activity",
+            "The Hunger Games: Catching Fire"]
+
         self.labels_DF['scene_label'] = self.labels_DF[' label '] + self.labels_DF[' sub-label ']
 
-        print(self.labels_DF)
+        # print(self.labels_DF)
+
+        # for i in range(0,len(allMovieNames)):
+        #     print(self.screening_DF[self.screening_DF['movie']==allMovieNames[i]])
 
         # Was going to use this, may be useful later
         nameDict =	{
@@ -124,18 +135,6 @@ class DataAnalysis():
         paranormal_DF = self.DFFunc.getMovieLabels(labels, self.paranormal_DF)
         tribute_DF = self.DFFunc.getMovieLabels(labels, self.tribute_DF)
 
-        # hobbit_DF = self.hobbit_DF.copy()
-        # hobbit_DF['labels'] = labels['scene_label']
-        # hobbit_DF = hobbit_DF.set_index('labels')
-        # print(hobbitDF.head(10))
-        allMovieNames = [
-            "Hobbit 2",
-            "Buddy",
-            "Machete Kills",
-            "Walter Mitty",
-            "Paranormal Activity",
-            "The Hunger Games: Catching Fire"]
-
         allLabelsDF = [
             hobbit_DF,
             buddy_DF,
@@ -144,14 +143,28 @@ class DataAnalysis():
             paranormal_DF,
             tribute_DF]
 
+        # hobbit_DF = self.hobbit_DF.copy()
+        # hobbit_DF['labels'] = labels['scene_label']
+        # hobbit_DF = hobbit_DF.set_index('labels')
+        # print(hobbitDF.head(10))
+
         # self.DFFunc.getInputDF(inLabelsDF=hobbit_DF, inScreening_DF=self.screening_DF, inGasDF=self.TOF_CO2_DF)
-        movieAvgDF = self.DFFunc.getMovieAvgDF(movieName=allMovieNames, inLabelsDF=allLabelsDF, inScreening_DF=self.screening_DF, inGasDF=self.TOF_CO2_DF)
+
+        goodMovieNames = [
+            # "Hobbit 2",
+            "Buddy",
+            # "Machete Kills",
+            "Walter Mitty",
+            # "Paranormal Activity",
+            "The Hunger Games: Catching Fire"]
+
+        movieAvgDF = self.DFFunc.getMovieAvgDF(movieName=goodMovieNames, inLabelsDF=allLabelsDF, inScreening_DF=self.screening_DF, inGasDF=self.TOF_CO2_DF)
         movieAvgDF.to_csv('../movieAvgDF.csv', sep=';', encoding='utf-8')
 
-        print(movieAvgDF.head(5))
-        print(movieAvgDF.tail(5))
+        # print(movieAvgDF.head(5))
+        # print(movieAvgDF.tail(5))
         
-        hobbit_Avg_DF = movieAvgDF[movieAvgDF['Movie']=='Hobbit 2']
+        # hobbit_Avg_DF = movieAvgDF[movieAvgDF['Movie']=='Hobbit 2']
 
         # print(hobbit_CO2DF_norm.head(5))
         # print(hobbit_Avg_DF.head(5))
@@ -169,6 +182,8 @@ class DataAnalysis():
         # self.plotChannelBackground(display=True)
         # self.plotRawData(display=True)
 
+        self.plotSessionsData(displayGraph=False)
+
         if self.displayGraph==True:
             plt.show()
 
@@ -177,50 +192,56 @@ class DataAnalysis():
 ###################################################################
 ###################################################################
 
-    def plotSessionsData(self):
+    def plotSessionsData(self, displayGraph=True):
 
         # Dataframe with each column as the gas channel data for each session of the specified movie and gas channel
-        # hobbit_CO2DF = self.DFFunc.getMovieDF(movieName='Hobbit 2', inLabelsDF=self.hobbit_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF)
-        # buddy_CO2DF = self.DFFunc.getMovieDF(movieName='Buddy', inLabelsDF=self.buddy_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF)
-        # machete_CO2DF = self.DFFunc.getMovieDF(movieName='Machete Kills', inLabelsDF=self.machete_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF)
-        # mitty_CO2DF = self.DFFunc.getMovieDF(movieName='Walter Mitty', inLabelsDF=self.mitty_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF)
-        # paranormal_CO2DF = self.DFFunc.getMovieDF(movieName='Paranormal Activity', inLabelsDF=self.paranormal_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF)
-        # tribute_CO2DF = self.DFFunc.getMovieDF(movieName='The Hunger Games: Catching Fire', inLabelsDF=self.tribute_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF)
+        hobbit_CO2DF = self.DFFunc.getMovieDF(movieName='Hobbit 2', inLabelsDF=self.hobbit_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF)
+        buddy_CO2DF = self.DFFunc.getMovieDF(movieName='Buddy', inLabelsDF=self.buddy_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF)
+        machete_CO2DF = self.DFFunc.getMovieDF(movieName='Machete Kills', inLabelsDF=self.machete_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF)
+        mitty_CO2DF = self.DFFunc.getMovieDF(movieName='Walter Mitty', inLabelsDF=self.mitty_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF)
+        paranormal_CO2DF = self.DFFunc.getMovieDF(movieName='Paranormal Activity', inLabelsDF=self.paranormal_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF)
+        tribute_CO2DF = self.DFFunc.getMovieDF(movieName='The Hunger Games: Catching Fire', inLabelsDF=self.tribute_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF)
 
-        # # Normalised for each session ((value-background)/attendence)
-        # hobbit_CO2DF_norm = self.DFFunc.getMovieDF(movieName='Hobbit 2', inLabelsDF=self.hobbit_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF, normalised=True)
-        # buddy_CO2DF_norm = self.DFFunc.getMovieDF(movieName='Buddy', inLabelsDF=self.buddy_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF, normalised=True)
-        # machete_CO2DF_norm = self.DFFunc.getMovieDF(movieName='Machete Kills', inLabelsDF=self.machete_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF, normalised=True)
-        # mitty_CO2DF_norm = self.DFFunc.getMovieDF(movieName='Walter Mitty', inLabelsDF=self.mitty_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF, normalised=True)
-        # paranormal_CO2DF_norm = self.DFFunc.getMovieDF(movieName='Paranormal Activity', inLabelsDF=self.paranormal_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF, normalised=True)
-        # tribute_CO2DF_norm = self.DFFunc.getMovieDF(movieName='The Hunger Games: Catching Fire', inLabelsDF=self.tribute_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF, normalised=True)
+        # Normalised for each session ((value-background)/attendence)
+        hobbit_CO2DF_norm = self.DFFunc.getMovieDF(movieName='Hobbit 2', inLabelsDF=self.hobbit_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF, normalised=True)
+        buddy_CO2DF_norm = self.DFFunc.getMovieDF(movieName='Buddy', inLabelsDF=self.buddy_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF, normalised=True)
+        machete_CO2DF_norm = self.DFFunc.getMovieDF(movieName='Machete Kills', inLabelsDF=self.machete_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF, normalised=True)
+        mitty_CO2DF_norm = self.DFFunc.getMovieDF(movieName='Walter Mitty', inLabelsDF=self.mitty_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF, normalised=True)
+        paranormal_CO2DF_norm = self.DFFunc.getMovieDF(movieName='Paranormal Activity', inLabelsDF=self.paranormal_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF, normalised=True)
+        tribute_CO2DF_norm = self.DFFunc.getMovieDF(movieName='The Hunger Games: Catching Fire', inLabelsDF=self.tribute_DF, inScreening_DF=self.screening_DF, channel='CO2', inGasDF=self.TOF_CO2_DF, normalised=True)
 
-        # self.plotMovieGasData(hobbit_CO2DF, movie='Hobbit 2', channel='CO2', display=True)
-        # self.plotMovieGasData(buddy_CO2DF, movie='Buddy', channel='CO2', display=True)
-        # self.plotMovieGasData(machete_CO2DF, movie='Machete Kills', channel='CO2', display=True)
-        # self.plotMovieGasData(mitty_CO2DF, movie='Walter Mitty', channel='CO2', display=True)
-        # self.plotMovieGasData(paranormal_CO2DF, movie='Paranormal Activity', channel='CO2', display=True)
-        # self.plotMovieGasData(tribute_CO2DF, movie='The Hunger Games: Catching Fire', channel='CO2', display=True)
+        # self.plotMovieGasData(hobbit_CO2DF, movie='Hobbit 2', channel='CO2', columns=self.hobbit_DF.shape[1], display=displayGraph)
+        # self.plotMovieGasData(buddy_CO2DF, movie='Buddy', channel='CO2', columns=self.buddy_DF.shape[1], display=displayGraph)
+        # self.plotMovieGasData(machete_CO2DF, movie='Machete Kills', channel='CO2', columns=self.machete_DF.shape[1], display=displayGraph)
+        # self.plotMovieGasData(mitty_CO2DF, movie='Walter Mitty', channel='CO2', columns=self.mitty_DF.shape[1], display=displayGraph)
+        # self.plotMovieGasData(paranormal_CO2DF, movie='Paranormal Activity', channel='CO2', columns=self.paranormal_DF.shape[1], display=displayGraph)
+        # self.plotMovieGasData(tribute_CO2DF, movie='The Hunger Games: Catching Fire', channel='CO2', columns=self.tribute_DF.shape[1], display=displayGraph)
 
-        # self.plotMovieGasData(hobbit_CO2DF_norm, movie='Hobbit 2', channel='CO2', display=True, normalised=True)
-        # self.plotMovieGasData(tribute_CO2DF_norm, movie='The Hunger Games: Catching Fire', channel='CO2', display=True, normalised=True)
+        # self.plotMovieGasData(hobbit_CO2DF_norm, movie='Hobbit 2', channel='CO2', columns=self.hobbit_DF.shape[1], display=displayGraph, normalised=True)
+        # self.plotMovieGasData(buddy_CO2DF_norm, movie='Buddy', channel='CO2', columns=self.buddy_DF.shape[1], display=displayGraph, normalised=True)
+        # self.plotMovieGasData(machete_CO2DF_norm, movie='Machete Kills', channel='CO2', columns=self.machete_DF.shape[1], display=displayGraph, normalised=True)
+        # self.plotMovieGasData(mitty_CO2DF_norm, movie='Walter Mitty', channel='CO2', columns=self.mitty_DF.shape[1], display=displayGraph, normalised=True)
+        # self.plotMovieGasData(paranormal_CO2DF_norm, movie='Paranormal Activity', channel='CO2', columns=self.paranormal_DF.shape[1], display=displayGraph, normalised=True)
+        # self.plotMovieGasData(tribute_CO2DF_norm, movie='The Hunger Games: Catching Fire', channel='CO2', columns=self.tribute_DF.shape[1], display=displayGraph, normalised=True)
 
         return
 
 ###################################################################
 ###################################################################
 
-    def plotMovieGasData(self, movieGasDF, movie, channel, display=False, normalised=False, average=False):
+    def plotMovieGasData(self, movieGasDF, movie, channel, columns=0, display=False, normalised=False, average=False):
 
         if normalised==True:
-            outputFilename = movie+"_"+channel+"_normed.png"
+            title = movie+"_"+channel+"_normed"
         else:
-            outputFilename = movie+"_"+channel+".png"
+            title = movie+"_"+channel
+
+        outputFilename = title+".png"
 
         if average==True:
-            self.plotData.plotMovieGasGraph(movieGasDF, title=channel, xlabel="Time", ylabel=channel, channel=channel, outputFileName=outputFilename, tilt=self.tiltBool, xTickRotation=self.rotation, dateFormat='%H:%M:%S')
+            self.plotData.plotMovieGasGraph(movieGasDF, title=title, xlabel="Time", ylabel=channel, channel=channel, outputFileName=outputFilename, tilt=self.tiltBool, xTickRotation=self.rotation, dateFormat='%H:%M:%S')
         else:
-            self.plotData.plotMovieSessionGasGraph(movieGasDF, title=channel, xlabel="Time", ylabel=channel, outputFileName=outputFilename, tilt=self.tiltBool, xTickRotation=self.rotation, dateFormat='%H:%M:%S')
+            self.plotData.plotMovieSessionGasGraph(movieGasDF, title=title, xlabel="Time", ylabel=channel, numColumns=columns, outputFileName=outputFilename, tilt=self.tiltBool, xTickRotation=self.rotation, dateFormat='%H:%M:%S')
 
         if display==True:
             self.displayGraph = True

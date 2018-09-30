@@ -48,7 +48,7 @@ class DFFunctions():
 ###################################################################
 ###################################################################
 
-    def getMovieDF(self, movieName, inLabelsDF, inScreening_DF, channel, inGasDF, normalised=False):
+    def getMovieDF(self, movieName, inLabelsDF, inScreening_DF, channel, inGasDF, normalised=False, trimmed=False):
 
         ## This function creates a dataframe that contains the values of the specified gas channel for all sessions of the specified movie
 
@@ -62,12 +62,13 @@ class DFFunctions():
 
         # Acquire the number of columns from the labels dataframe for determining the time length of the movie
         numColumns = labelsDF.shape[1]
+        num30SecBlocks = numColumns+90
 
         # Create time column of values from start of movie session
         sessionStart = time(hour=0, minute=0, second=0)
-        sessionTime = [None]*numColumns
+        sessionTime = [None]*num30SecBlocks
 
-        for i in range(0, numColumns):
+        for i in range(0, num30SecBlocks):
             sessionTime[i] = datetime.combine(datetime.now().date(),sessionStart) + i*timedelta(seconds=30)
 
         # Create output dataframe with time from start of each session
@@ -75,6 +76,8 @@ class DFFunctions():
 
         # Get data for the specified gas channel
         movieDF = screening_DF[screening_DF['movie'] == movieName]
+
+        movieDF = self.getCleanMovieSessions(inDF=movieDF, movieName=movieName)
 
         # Resets the index for joining data
         movieDF = movieDF.reset_index()
@@ -90,10 +93,16 @@ class DFFunctions():
         for i in range(0, movieDF.shape[0]):
 
             # Acquire start time of movie session
-            start = movieDF['scheduled'][i]
+            start = movieDF['begin'][i]
+
+            # Acquire start time of movie session
+            scheduled = movieDF['scheduled'][i]
 
             # Determine end time of the movie session by assuming each column is 30s
-            end = start + numColumns*timedelta(seconds=30)
+            if trimmed==True:
+                end = start + numColumns*timedelta(seconds=30)
+            else:
+                end = scheduled + num30SecBlocks*timedelta(seconds=30)
 
             # Get data from gas channel and reset index
             session = gasDF[(gasDF['Time']>=start) & (gasDF['Time']<=end)].reset_index()
@@ -109,6 +118,132 @@ class DFFunctions():
                 outDF[str(start)] = session[channel].apply(lambda x: (x-background)/attendence)
             else:
                 outDF[str(start)] = session[channel]
+
+        return outDF
+
+###################################################################
+###################################################################
+
+    def getCleanMovieSessions(self, inDF, movieName):
+
+        cleanedDF = inDF.copy()
+
+        del inDF
+
+        # Remove problematic sessions
+        tributeSessions = [datetime.strptime('2013-12-30 13:15', '%Y-%m-%d %H:%M'),
+            datetime.strptime('2014-01-06 13:50:00', '%Y-%m-%d %H:%M:%S'),
+            datetime.strptime('2014-01-08 13:45:00', '%Y-%m-%d %H:%M:%S')]
+
+        if movieName == 'The Hunger Games: Catching Fire':
+            cleanedDF = cleanedDF[~cleanedDF['begin'].isin(tributeSessions)]
+
+        buddySessions = [
+            datetime.strptime('2013-12-25 12:10', '%Y-%m-%d %H:%M'),
+            datetime.strptime('2013-12-25 23:10', '%Y-%m-%d %H:%M'),
+            datetime.strptime('2013-12-26 22:25', '%Y-%m-%d %H:%M'),
+            datetime.strptime('2013-12-27 22:25', '%Y-%m-%d %H:%M'),
+            datetime.strptime('2013-12-29 22:25', '%Y-%m-%d %H:%M'),
+            datetime.strptime('2013-12-30 22:25', '%Y-%m-%d %H:%M'),
+            datetime.strptime('2014-01-01 22:25', '%Y-%m-%d %H:%M')
+            ]
+
+        if movieName == 'Buddy':
+            cleanedDF = cleanedDF[~cleanedDF['begin'].isin(buddySessions)]
+
+        walterMittySessions = [
+            datetime.strptime('2013-12-19 20:00', '%Y-%m-%d %H:%M'),
+            datetime.strptime('2014-01-02 23:15', '%Y-%m-%d %H:%M'),
+            datetime.strptime('2014-01-03 23:15', '%Y-%m-%d %H:%M'),
+            datetime.strptime('2014-01-04 20:15', '%Y-%m-%d %H:%M'), # This is a weird session
+            datetime.strptime('2014-01-04 23:15', '%Y-%m-%d %H:%M'),
+            datetime.strptime('2014-01-05 23:15', '%Y-%m-%d %H:%M'),
+            datetime.strptime('2014-01-06 23:15', '%Y-%m-%d %H:%M'),
+            datetime.strptime('2014-01-07 23:15', '%Y-%m-%d %H:%M'),
+            datetime.strptime('2014-01-08 23:15', '%Y-%m-%d %H:%M')
+            ]
+
+        if movieName == 'Walter Mitty':
+            cleanedDF = cleanedDF[~cleanedDF['begin'].isin(walterMittySessions)]
+
+        # Apply time shift correction
+
+        buddyCorrections_dict = {
+            datetime.strptime('2013-12-25 14:50', '%Y-%m-%d %H:%M'):40,
+            datetime.strptime('2013-12-25 17:35', '%Y-%m-%d %H:%M'):42,
+            datetime.strptime('2013-12-25 20:20', '%Y-%m-%d %H:%M'):40,
+            datetime.strptime('2013-12-26 19:30', '%Y-%m-%d %H:%M'):68,
+            datetime.strptime('2013-12-27 19:30', '%Y-%m-%d %H:%M'):70,
+            datetime.strptime('2013-12-28 22:25', '%Y-%m-%d %H:%M'):10,
+            datetime.strptime('2013-12-28 19:30', '%Y-%m-%d %H:%M'):72,
+            datetime.strptime('2013-12-29 19:30', '%Y-%m-%d %H:%M'):68,
+            datetime.strptime('2013-12-30 19:30', '%Y-%m-%d %H:%M'):68,
+            datetime.strptime('2014-01-01 19:30', '%Y-%m-%d %H:%M'):67
+        }
+
+        if movieName == 'Buddy':
+            cleanedDF = self.getSyncMovieDF(inDF=cleanedDF, delayDict=buddyCorrections_dict)
+
+        tributeCorrections_dict = {
+            datetime.strptime('2013-12-26 13:15', '%Y-%m-%d %H:%M'):52,
+            datetime.strptime('2013-12-27 13:15', '%Y-%m-%d %H:%M'):57,
+            datetime.strptime('2013-12-28 13:15', '%Y-%m-%d %H:%M'):55,
+            datetime.strptime('2013-12-29 13:15', '%Y-%m-%d %H:%M'):58,
+            datetime.strptime('2013-12-31 13:15', '%Y-%m-%d %H:%M'):54,
+            datetime.strptime('2014-01-02 13:45', '%Y-%m-%d %H:%M'):44,
+            datetime.strptime('2014-01-03 13:45', '%Y-%m-%d %H:%M'):42,
+            datetime.strptime('2014-01-04 13:45', '%Y-%m-%d %H:%M'):44,
+            datetime.strptime('2014-01-05 13:45', '%Y-%m-%d %H:%M'):40,
+            datetime.strptime('2014-01-07 13:45', '%Y-%m-%d %H:%M'):12
+        }
+
+        if movieName == 'The Hunger Games: Catching Fire':
+            cleanedDF = self.getSyncMovieDF(inDF=cleanedDF, delayDict=tributeCorrections_dict)
+
+        walterMittyCorrections_dict = {
+            datetime.strptime('2014-01-01 16:25', '%Y-%m-%d %H:%M'):47,
+            datetime.strptime('2014-01-02 17:15', '%Y-%m-%d %H:%M'):35,
+            datetime.strptime('2014-01-02 20:15', '%Y-%m-%d %H:%M'):39,
+            datetime.strptime('2014-01-03 17:15', '%Y-%m-%d %H:%M'):36,
+            datetime.strptime('2014-01-03 20:15', '%Y-%m-%d %H:%M'):39,
+            datetime.strptime('2014-01-04 17:15', '%Y-%m-%d %H:%M'):34,
+            datetime.strptime('2014-01-05 17:15', '%Y-%m-%d %H:%M'):34,
+            datetime.strptime('2014-01-05 20:15', '%Y-%m-%d %H:%M'):39,
+            datetime.strptime('2014-01-06 17:15', '%Y-%m-%d %H:%M'):35,
+            datetime.strptime('2014-01-06 20:15', '%Y-%m-%d %H:%M'):39,
+            datetime.strptime('2014-01-07 17:15', '%Y-%m-%d %H:%M'):37,
+            datetime.strptime('2014-01-07 20:15', '%Y-%m-%d %H:%M'):41,
+            datetime.strptime('2014-01-08 17:15', '%Y-%m-%d %H:%M'):37,
+            datetime.strptime('2014-01-08 20:15', '%Y-%m-%d %H:%M'):37
+        }
+
+        if movieName == 'Walter Mitty':
+            cleanedDF = self.getSyncMovieDF(inDF=cleanedDF, delayDict=walterMittyCorrections_dict)
+
+        macheteKillsCorrections_dict = {
+            datetime.strptime('2013-12-23 19:35', '%Y-%m-%d %H:%M'):65
+        }
+
+        if movieName == 'Machete Kills':
+            cleanedDF = self.getSyncMovieDF(inDF=cleanedDF, delayDict=macheteKillsCorrections_dict)
+
+        return cleanedDF
+
+###################################################################
+###################################################################
+
+    def getSyncMovieDF(self, inDF, delayDict):
+
+        outDF = inDF.copy()
+
+        del inDF
+
+        allDates = list(delayDict.keys())
+        for i in range(0, len(allDates)):
+            index = int(outDF[outDF['begin']==allDates[i]].index[0])
+            delay = delayDict[allDates[i]]
+            adjusted = outDF['begin'][index]+delay*timedelta(seconds=30)
+            outDF['begin'][index] = adjusted
 
         return outDF
 
@@ -172,12 +307,12 @@ class DFFunctions():
 
             bar = progressbar.ProgressBar(widgets=widgets)
 
-            for j in bar(range(1,20)):
-            # for j in bar(range(1,len(colNames))):
+            # for j in bar(range(1,20)):
+            for j in bar(range(1,len(colNames))):
                 channelName = colNames[j]
                 # print(movieName[i] + ': ' + channelName + ' (' + str(j) + '/' + str(len(colNames)) + '), Movie (' + str(i) + '/' + str(len(movieName)) + ')')
             
-                movieDF = self.getMovieDF(movieName=movieName[i], inLabelsDF=labelsDF, inScreening_DF=screening_DF, channel=channelName, inGasDF=gasDF, normalised=True)
+                movieDF = self.getMovieDF(movieName=movieName[i], inLabelsDF=labelsDF, inScreening_DF=screening_DF, channel=channelName, inGasDF=gasDF, normalised=True, trimmed=True)
                 # numSessions = movieDF.shape[1]-1
                 movieDF['sum'] = movieDF.apply(self.sumRowWithNan, axis=1)
                 movieDF['nonNaN'] = movieDF.apply(self.getRowNonNaNNum, axis=1)

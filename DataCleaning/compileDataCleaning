@@ -1,0 +1,8 @@
+#!/bin/bash
+
+pdflatex DataCleaning && \
+# bibtex DataCleaning && \
+pdflatex DataCleaning && \
+pdflatex DataCleaning
+
+rm *.log *.aux *.bbl *.blg *.out
