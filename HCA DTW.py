@@ -15,10 +15,6 @@ import scipy.cluster.hierarchy as shc
 import scipy.stats as stats
 from sklearn.metrics import silhouette_samples, silhouette_score
 from scipy.cluster.hierarchy import fcluster
-
-
-#def intcaststr(bitlist):
-#     return int("".join(str(i) for i in bitlist), 2)
  
 moviedatafull = pd.read_csv('movieAvgDF.csv', sep = ';')
 print(moviedatafull.head(10))
@@ -96,6 +92,4 @@ dffull.boxplot(column= 'm16.0201', by = 'cluster')
 summary = dffull.groupby(['cluster']).describe()
 
 #one way ANOVA
-for 'CO2' in dffull.groupby('cluster'):
-    samples = [cluster[1] for 'cluster' in 'CO2'[1].groupby('cluster')['value']]
-    f_val, p_val = stats.f_oneway(*samples)
+
