@@ -86,9 +86,6 @@ clusteravg = dffull.groupby(['cluster']).mean()
 dffull.groupby(['cluster']).sum()
 dffull.boxplot(column= 'CO2', by = 'cluster')
 dffull.boxplot(column= 'm14.0028', by = 'cluster')
-dffull.boxplot(column= 'm15.0238', by = 'cluster')
-dffull.boxplot(column= 'm15.9962', by = 'cluster')
-dffull.boxplot(column= 'm16.0201', by = 'cluster')
 summary = dffull.groupby(['cluster']).describe()
 
 #one way ANOVA
