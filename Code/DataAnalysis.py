@@ -158,8 +158,18 @@ class DataAnalysis():
             # "Paranormal Activity",
             "The Hunger Games: Catching Fire"]
 
-        movieAvgDF = self.DFFunc.getMovieAvgDF(movieName=goodMovieNames, inLabelsDF=allLabelsDF, inScreening_DF=self.screening_DF, inGasDF=self.TOF_CO2_DF)
-        movieAvgDF.to_csv('../movieAvgDF.csv', sep=';', encoding='utf-8')
+        goodLabelsDF = [
+            # hobbit_DF,
+            buddy_DF,
+            # machete_DF,
+            mitty_DF,
+            # paranormal_DF,
+            tribute_DF]
+
+        self.getMovieAnalysisDF(goodMovieNames, goodLabelsDF)
+
+        # movieAvgDF = self.DFFunc.getMovieAvgDF(movieName=goodMovieNames, inLabelsDF=allLabelsDF, inScreening_DF=self.screening_DF, inGasDF=self.TOF_CO2_DF)
+        # movieAvgDF.to_csv('../movieAvgDF.csv', sep=';', encoding='utf-8')
 
         # print(movieAvgDF.head(5))
         # print(movieAvgDF.tail(5))
@@ -186,6 +196,32 @@ class DataAnalysis():
 
         if self.displayGraph==True:
             plt.show()
+
+        return
+
+###################################################################
+###################################################################
+
+    def getMovieAnalysisDF(self, movieNames, labelsDF):
+
+        print(movieNames[0])
+        outDF = self.DFFunc.getMovieDF(movieName=movieNames[0], inLabelsDF=labelsDF[0], inScreening_DF=self.screening_DF, inGasDF=self.TOF_CO2_DF)
+
+        print(outDF.head())
+
+        for i in range(1,len(movieNames)):
+            print(movieNames[i])
+
+            movieDF = self.DFFunc.getMovieDF(movieName=movieNames[i], inLabelsDF=labelsDF[i], inScreening_DF=self.screening_DF, inGasDF=self.TOF_CO2_DF)
+
+            outDF = outDF.append(movieDF, ignore_index=True)
+
+            del movieDF
+
+        outDF.to_csv('../movieAvgDF.csv', sep=';', encoding='utf-8')
+
+        print(outDF.shape)
+        print(outDF[outDF['sessionTime']==dt.datetime.combine(dt.datetime.now().date(),dt.time(hour=0, minute=0, second=0))])
 
         return
 

@@ -48,7 +48,7 @@ class DFFunctions():
 ###################################################################
 ###################################################################
 
-    def getMovieDF(self, movieName, inLabelsDF, inScreening_DF, channel, inGasDF, normalised=False, trimmed=False):
+    def getMovieDF(self, movieName, inLabelsDF, inScreening_DF, inGasDF, channel="", normalised=False, trimmed=False):
 
         ## This function creates a dataframe that contains the values of the specified gas channel for all sessions of the specified movie
 
@@ -82,42 +82,120 @@ class DFFunctions():
         # Resets the index for joining data
         movieDF = movieDF.reset_index()
 
-        # Get background count of channel
-        if (normalised==True):
-            background = self.getChannelBackground(channel, gasDF)
+        if len(channel)<1:
+
+            channels = list(gasDF.columns)
+
+            background = [None] * len(channels)
+
+            labelsDF_T = self.getSessionLabels(labelsDF)
+
+            for j in range(1,len(channels)):
+                
+                # Get background count of channel
+                if (normalised==True):
+                    background[j] = self.getChannelBackground(channels[j], gasDF)
+                else:
+                    background[j] = 0
+                    
+            widgets=[
+                ' [', progressbar.Timer(), '] ',
+                progressbar.Bar(),
+                ' (', progressbar.ETA(), ') ',
+            ]
+
+            bar = progressbar.ProgressBar(widgets=widgets)
+
+            # Loop throught the list of session starting times
+            for i in bar(range(0, movieDF.shape[0])):
+
+                # Acquire start time of movie session
+                start = movieDF['begin'][i]
+
+                # Acquire start time of movie session
+                scheduled = movieDF['scheduled'][i]
+
+                # Determine end time of the movie session by assuming each column is 30s
+                if trimmed==True:
+                    end = start + numColumns*timedelta(seconds=30)
+                else:
+                    end = scheduled + num30SecBlocks*timedelta(seconds=30)
+
+                # Get data from gas channel and reset index
+                session = gasDF[(gasDF['Time']>=start) & (gasDF['Time']<=end)].reset_index()
+
+                sessionDF = pd.DataFrame({'sessionTime': pd.Series(sessionTime), 'Movie': movieName})
+                session_normedDF = pd.DataFrame({'sessionTime': pd.Series(sessionTime), 'Movie': movieName})
+                session_normedDF['sessionStart'] = start
+
+                # Get atttendence
+                if (normalised==True):
+                    attendence = (movieDF['filled %'][i]*movieDF['capacity'][i])/100.0
+                else:
+                    attendence = 1.0
+
+                # Only add to the output dataframe if the dataframe if not empty
+                if session.shape[0] < 1:
+                    continue;
+                elif (normalised==True):
+                    for j in range(1,len(channels)):
+                        sessionDF[channels[j]] = session[channels[j]].apply(lambda x: (x-background[j])/attendence)
+                else:
+                    for j in range(1,len(channels)):
+                        sessionDF[channels[j]] = session[channels[j]]
+
+                for j in range(1,len(channels)):
+                    total = sessionDF[channels[j]].sum()
+                    session_normedDF[channels[j]] = sessionDF[channels[j]]/total
+
+                session_normedDF['labels'] = labelsDF_T['labels']
+                session_normedDF['label_Names'] = labelsDF_T['label_Names']
+
+                if i==0:
+                    outDF = session_normedDF
+                else:
+                    outDF = outDF.append(session_normedDF, ignore_index=True)
+
+                del session_normedDF
+            
         else:
-            background = 0
-            attendence = 1.0
 
-        # Loop throught the list of session starting times
-        for i in range(0, movieDF.shape[0]):
-
-            # Acquire start time of movie session
-            start = movieDF['begin'][i]
-
-            # Acquire start time of movie session
-            scheduled = movieDF['scheduled'][i]
-
-            # Determine end time of the movie session by assuming each column is 30s
-            if trimmed==True:
-                end = start + numColumns*timedelta(seconds=30)
-            else:
-                end = scheduled + num30SecBlocks*timedelta(seconds=30)
-
-            # Get data from gas channel and reset index
-            session = gasDF[(gasDF['Time']>=start) & (gasDF['Time']<=end)].reset_index()
-
-            # Get atttendence
+            # Get background count of channel
             if (normalised==True):
-                attendence = (movieDF['filled %'][i]*movieDF['capacity'][i])/100.0
-
-            # Only add to the output dataframe if the dataframe if not empty
-            if session.shape[0] < 1:
-                continue;
-            elif (normalised==True):
-                outDF[str(start)] = session[channel].apply(lambda x: (x-background)/attendence)
+                background = self.getChannelBackground(channel, gasDF)
             else:
-                outDF[str(start)] = session[channel]
+                background = 0
+                attendence = 1.0
+
+            # Loop throught the list of session starting times
+            for i in range(0, movieDF.shape[0]):
+
+                # Acquire start time of movie session
+                start = movieDF['begin'][i]
+
+                # Acquire start time of movie session
+                scheduled = movieDF['scheduled'][i]
+
+                # Determine end time of the movie session by assuming each column is 30s
+                if trimmed==True:
+                    end = start + numColumns*timedelta(seconds=30)
+                else:
+                    end = scheduled + num30SecBlocks*timedelta(seconds=30)
+
+                # Get data from gas channel and reset index
+                session = gasDF[(gasDF['Time']>=start) & (gasDF['Time']<=end)].reset_index()
+
+                # Get atttendence
+                if (normalised==True):
+                    attendence = (movieDF['filled %'][i]*movieDF['capacity'][i])/100.0
+
+                # Only add to the output dataframe if the dataframe if not empty
+                if session.shape[0] < 1:
+                    continue;
+                elif (normalised==True):
+                    outDF[str(start)] = session[channel].apply(lambda x: (x-background)/attendence)
+                else:
+                    outDF[str(start)] = session[channel]
 
         return outDF
 
@@ -242,8 +320,8 @@ class DFFunctions():
         for i in range(0, len(allDates)):
             index = int(outDF[outDF['begin']==allDates[i]].index[0])
             delay = delayDict[allDates[i]]
-            adjusted = outDF['begin'][index]+delay*timedelta(seconds=30)
-            outDF['begin'][index] = adjusted
+            adjusted = outDF.at[index, 'begin']+delay*timedelta(seconds=30)
+            outDF.at[index, 'begin'] = adjusted
 
         return outDF
 
@@ -307,8 +385,8 @@ class DFFunctions():
 
             bar = progressbar.ProgressBar(widgets=widgets)
 
-            # for j in bar(range(1,20)):
-            for j in bar(range(1,len(colNames))):
+            for j in bar(range(1,20)):
+            # for j in bar(range(1,len(colNames))):
                 channelName = colNames[j]
                 # print(movieName[i] + ': ' + channelName + ' (' + str(j) + '/' + str(len(colNames)) + '), Movie (' + str(i) + '/' + str(len(movieName)) + ')')
             
