@@ -222,6 +222,7 @@ class DataAnalysis():
 
         print(outDF.shape)
         print(outDF[outDF['sessionTime']==dt.datetime.combine(dt.datetime.now().date(),dt.time(hour=0, minute=0, second=0))])
+        print(outDF.loc[237:238])
 
         return
 

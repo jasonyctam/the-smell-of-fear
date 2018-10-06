@@ -1,4 +1,7 @@
 2018-10-06 jasonyctam@gmail.com
+ - Removed generation of empty rows in movieAvgDF.csv
+
+2018-10-06 jasonyctam@gmail.com
  - Removed mistakes and session averaging from movieAvgDF.csv
  - Grouped commands into getMovieAnalysisDF in DataAnalysis.py
 

@@ -66,10 +66,17 @@ class DFFunctions():
 
         # Create time column of values from start of movie session
         sessionStart = time(hour=0, minute=0, second=0)
-        sessionTime = [None]*num30SecBlocks
+        
 
-        for i in range(0, num30SecBlocks):
-            sessionTime[i] = datetime.combine(datetime.now().date(),sessionStart) + i*timedelta(seconds=30)
+        if len(channel)<1:
+            sessionTime = [None]*numColumns
+            for i in range(0, numColumns):
+                sessionTime[i] = datetime.combine(datetime.now().date(),sessionStart) + i*timedelta(seconds=30)
+
+        else:
+            sessionTime = [None]*num30SecBlocks
+            for i in range(0, num30SecBlocks):
+                sessionTime[i] = datetime.combine(datetime.now().date(),sessionStart) + i*timedelta(seconds=30)
 
         # Create output dataframe with time from start of each session
         outDF = pd.DataFrame({'sessionTime': pd.Series(sessionTime)})
@@ -89,6 +96,8 @@ class DFFunctions():
             background = [None] * len(channels)
 
             labelsDF_T = self.getSessionLabels(labelsDF)
+
+            print('sessionTime Length: ' + str(len(sessionTime)))
 
             for j in range(1,len(channels)):
                 
